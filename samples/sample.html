@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+	<head>
+    	<meta charset="utf-8" />
+		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css" />
+		<script src="../src/helden.min.js"></script>
+		<script src="../src/helden.ui.min.js"></script>
+		<script src="zepto.min.js"></script>
+		<style>
+
+			#template {
+				margin: 20px auto;
+				width: 80%;
+			}
+
+			.hide {
+				display: none;
+			}
+
+			#template .items {
+				display: block;
+				list-style: none;
+				overflow: auto;
+				padding: 0;
+			}
+
+			#template .items li {
+				display: block;
+				float: left;
+				border-top: 1px solid #dedede;
+				padding: 15px;
+				margin: 10px 15px;
+				max-width: 40%;
+			}
+			#template .items li .title,
+			#template .items li .description {
+				display: block;
+			}
+			#template .items li .title {
+				font-weight: bold;
+				margin-bottom: 3px;
+			}
+		</style>
+		<script>
+
+			var todo = null
+
+			$(function(){
+
+				todo = {
+
+					form: observable( "#template form" ).bindIds(),
+
+					focusFirstElement: observable( "#template form #title" ).focus(),
+	
+					items: observable( "#template .items li" ).forEach({
+						title: observable(".title").bind(),
+						description: observable( ".description" ).bind(),
+
+						removeMe: observable( "span" ).bind( "click", function( view, parent ){
+							parent.items().remove( this )
+						})
+					}),
+
+					addItem: observable( "#template .btn-add" ).bind( "click", function(){
+						this.items().push({
+							title: this.form().title(),
+							description: this.form().description()
+						})
+						this.focusFirstElement( true )
+					})
+				}
+
+				observable( todo )
+			})
+
+		</script>
+	</head>
+	<body>
+
+		<div id="template">
+			<form class="pure-form">
+				<fieldset>
+					<legend>New task</legend>
+					<input type="text" id="title" placeholder="Title" />
+					<input type="text" id="description" placeholder="Description" />
+					<button type="button" class="pure-button pure-button-primary btn-add">Adicionar</button>
+				</fieldset>
+			</form>
+
+			<h2>My tasks</h2>
+			<ul class="items">
+				<li>
+					<span class="title"></span>
+					<span class="description"></span>
+				</li>
+			</ul>
+		</div>
+
+	</body>
+</html>
