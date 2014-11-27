@@ -244,7 +244,7 @@ window.observable = (function(){
 
 	function makeModelObservable( model, selector ) {
 		var view = selector ? $( selector ) : $( "body" )
-		makeModelObserveAView( model, view )
+		return makeModelObserveAView( model, view )
 	}
 
 	function makeModelObserveAView( model, view, target, parentModel ){
@@ -260,6 +260,7 @@ window.observable = (function(){
 				target[attr] = resp
 			}
 		}
+		return target
 	}
 
 	function isFunction( obj ) {

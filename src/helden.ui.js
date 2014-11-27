@@ -23,10 +23,9 @@
 			}
 
 			function setValue( v ){
-				if ( v == true )
-					view.removeClass( 'hide' )
-				else
-					view.addClass( 'hide' )
+				var m = ( v == true )
+					? view.show : view.hide
+				m.call( view )
 				isVisible = v
 			}
 
