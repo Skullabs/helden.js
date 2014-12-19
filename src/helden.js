@@ -134,7 +134,7 @@ window.helden = (function(){
 		function bindModelToView( view ){
 			view.find( "*[id]" )
 				.each(function(){
-					var defaultValue = this.value || model[ this.id ] || ""
+					var defaultValue = (this.type == "checkbox" ? this.checked : this.value) || model[ this.id ] || ""
 					var m = new DomBinder().configure( $(this), model, defaultValue )
 					model[ this.id ] = m
 				})
