@@ -43,35 +43,31 @@
 		</style>
 		<script>
 
-			var todo = null
-
 			$(function(){
 
-				todo = {
+				observable({
 
-					form: observable( "#template form" ).bindIds(),
+					form: select( "#template form" ).bindIds(),
 
-					focusFirstElement: observable( "#template form #title" ).focus(),
+					focusFirstElement: select( "#template form #title" ).focus(),
 	
-					items: observable( "#template .items li" ).forEach({
-						title: observable(".title").bind(),
-						description: observable( ".description" ).bind(),
+					items: select( "#template .items li" ).forEach({
+						title: select(".title").bind(),
+						description: select( ".description" ).bind(),
 
-						removeMe: observable( "span" ).bind( "click", function( view, parent ){
+						removeMe: select( "span" ).bind( "click", function( view, parent ){
 							parent.items().remove( this )
 						})
 					}),
 
-					addItem: observable( "#template .btn-add" ).bind( "click", function(){
+					addItem: select( "#template .btn-add" ).bind( "click", function(){
 						this.items().push({
 							title: this.form().title(),
 							description: this.form().description()
 						})
 						this.focusFirstElement( true )
 					})
-				}
-
-				observable( todo )
+				})
 			})
 
 		</script>

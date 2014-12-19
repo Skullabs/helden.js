@@ -2,7 +2,7 @@
  * helden.js heroically born two way binding
  * @author: Miere Liniel Teixeira <miere.teixeira@gmail.com>
  */
-window.observable = (function(){
+window.helden = (function(){
 
 	// constants
 	var BINDABLE_ELEMENTS = [ "BUTTON", "INPUT", "TEXTAREA", "SELECT" ]
@@ -208,8 +208,22 @@ window.observable = (function(){
 		}
 
 		function makeTwoWayBindable( element ) {
+			return ( element.attr("type") == "checkbox" )
+				? makeCheckboxTwoWayBindable( element )
+				: makeInputsTwoWayBindable( element )
+		}
+
+		function makeInputsTwoWayBindable( element ) {
 			return function(){
 				return element.val.apply( element, arguments )
+			}
+		}
+
+		function makeCheckboxTwoWayBindable( element ) {
+			return function( value ) {
+				if ( value == undefined )
+					return element.prop( "checked" )
+				return element.prop( "checked", value )
 			}
 		}
 
@@ -270,24 +284,30 @@ window.observable = (function(){
 	/**
 	 * Exposed 'observable' API
 	 */
-	var observable = function(){
-		if ( arguments.length == 1 ) {
-			if ( ( typeof arguments[0] ) == "string" )
-				return new Observable( arguments[0] )
-			return makeModelObservable( arguments[0] )
-		}
+	var select = function(){
+		if ( arguments.length == 1 && ( typeof arguments[0] ) == "string" )
+			return new Observable( arguments[0] )
 		else if ( arguments.length == 2 )
 			return makeModelObservable.apply( this, arguments )
 		throw "Invalid syntax"
 	}
+	select.extensions = extensions
 
-	observable.extensions = extensions
-	observable.util = {
-		DomBinder: DomBinder,
-		DomEventBinder: DomEventBinder,
-		ForEachBinder: ForEachBinder,
-		FormIDBinder: FormIDBinder,
-		ObservableArray: ObservableArray
+	var helden = {
+		select: select,
+		observable: makeModelObservable,
+		util: {
+			DomBinder: DomBinder,
+			DomEventBinder: DomEventBinder,
+			ForEachBinder: ForEachBinder,
+			FormIDBinder: FormIDBinder,
+			ObservableArray: ObservableArray
+		}
 	}
-	return observable
+	return helden
 })()
+
+if ( !window.observable )
+	window.observable = helden.observable
+if ( !window.select )
+	window.select = helden.select

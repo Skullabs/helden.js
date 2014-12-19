@@ -4,8 +4,8 @@
 		<title>Votes</title>
     	<meta charset="utf-8" />
 		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css" />
-		<script src="../src/helden.min.js"></script>
-		<script src="../src/helden.ui.min.js"></script>
+		<script src="../src/helden.js"></script>
+		<script src="../src/helden.ui.js"></script>
 		<script src="zepto.min.js"></script>
 		<style>
 
@@ -44,40 +44,38 @@
 		</style>
 		<script>
 
-			var todo = null
-
 			$(function(){
 
-				todo = {
+				var todo = observable({
 
 					/**
 					 * Make bindable all form elements that have an id
 					 */
-					form: observable( "#template form" ).bindIds(),
+					form: select( "#template form" ).bindIds(),
 
 					/**
 					 * Force a focus on first form element
 					 */
-					focusFirstElement: observable( "#template form #description" ).focus(),
+					focusFirstElement: select( "#template form #description" ).focus(),
 
 					/**
 					 * The question list.
 					 */
-					items: observable( "#template .items li" ).forEach({
+					items: select( "#template .items li" ).forEach({
 
 						// votes display
-						votes: observable( ".btn-vote-up" ).bind(),
+						votes: select( ".btn-vote-up" ).bind(),
 						// description display
-						description: observable( ".description" ).bind(),
+						description: select( ".description" ).bind(),
 
 						// remove a question
-						removeMe: observable( "span" ).bind( "click", function( view, parent )
+						removeMe: select( "span" ).bind( "click", function( view, parent )
 						{
 							parent.items().remove( this )
 						}),
 
 						// vote it up
-						onVoteUp: observable( ".btn-vote-up" ).bind( "click", function( view, parent )
+						onVoteUp: select( ".btn-vote-up" ).bind( "click", function( view, parent )
 						{
 							var newVotes = parseInt( this.votes() ) + 1
 							this.votes( newVotes )
@@ -88,7 +86,7 @@
 					/**
 					 * Add a new item to items' list
 					 */
-					addItem: observable( "#template .btn-add" ).bind( "click", function()
+					addItem: select( "#template .btn-add" ).bind( "click", function()
 					{
 						this.items().push( {
 							votes: this.form().votes(),
@@ -106,9 +104,8 @@
 							return parseInt( item.votes() )
 						} )
 					}
-				}
+				})
 
-				observable( todo )
 				todo.focusFirstElement()
 			})
 
