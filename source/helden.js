@@ -28,7 +28,14 @@ window.helden = (function(){
 		 * Bind all input/textarea/select/radio/checkbox ids found inside nodes retrieved by current selector
 		 */
 		this.bindIds = function(){
-			return new FormIDBinder( selector )
+			return new FormBinder( selector )
+		}
+
+		/**
+		 * Bind all input/textarea/select/radio/checkbox names found inside nodes retrieved by current selector
+		 */
+		this.bindNames = function(){
+			return new FormBinder( selector, "name" )
 		}
 
 		/**
@@ -119,9 +126,10 @@ window.helden = (function(){
 	/**
 	 * Make the elements from a form bind its ID's elements against a model.
 	 */
-	function FormIDBinder( selector ) {
+	function FormBinder( selector, attribute ) {
 		this.selector = selector
 		var model = {}
+		attribute = attribute || "id"
 
 		this.configure = function( view ) {
 			bindModelToView( view )
@@ -132,11 +140,11 @@ window.helden = (function(){
 		}
 
 		function bindModelToView( view ){
-			view.find( "*[id]" )
+			view.find( "*["+ attribute +"]" )
 				.each(function(){
-					var defaultValue = (this.type == "checkbox" ? this.checked : this.value) || model[ this.id ] || ""
+					var defaultValue = (this.type == "checkbox" ? this.checked : this.value) || model[ this[attribute] ] || ""
 					var m = new DomBinder().configure( $(this), model, defaultValue )
-					model[ this.id ] = m
+					model[ this[attribute] ] = m
 				})
 		}
 	}
@@ -300,7 +308,7 @@ window.helden = (function(){
 			DomBinder: DomBinder,
 			DomEventBinder: DomEventBinder,
 			ForEachBinder: ForEachBinder,
-			FormIDBinder: FormIDBinder,
+			FormBinder: FormBinder,
 			ObservableArray: ObservableArray
 		}
 	}
@@ -311,3 +319,5 @@ if ( !window.observable )
 	window.observable = helden.observable
 if ( !window.select )
 	window.select = helden.select
+
+
