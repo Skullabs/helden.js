@@ -5,6 +5,7 @@
 window.helden = (function(){
 
 	// constants
+	var DO_NOTHING = function(){}
 	var BINDABLE_ELEMENTS = [ "BUTTON", "INPUT", "TEXTAREA", "SELECT" ]
 	var extensions = {}
 
@@ -157,6 +158,14 @@ window.helden = (function(){
 
 		var name = selector.replace(/[^a-zA-Z0-9]/g, '')
 		var model = new ObservableArray()
+		var onChange = DO_NOTHING
+
+		this.onChange = function( callback ){
+			if ( !isFunction( callback ) )
+				throw "Callback should be a function"
+			onChange = callback.bind( model )
+			return this
+		}
 
 		this.configure = function( view, originalModel, defaultValue, parentModel ) {
 
@@ -170,12 +179,14 @@ window.helden = (function(){
 				clone.attr( "id", name + index )
 				makeModelObserveAView( templateModel, clone, item, originalModel )
 				parent.append( clone )
+				onChange( parentModel )
 				return item
 			}
 
 			model.onRemove = function( index, item ){
 				index = item.ID_ForEachBinder
 				parent.find( "#" + index ).remove()
+				onChange( parentModel )
 			}
 
 			model.onSort = function() {
@@ -190,6 +201,7 @@ window.helden = (function(){
 						last.after( current )
 					last = current
 				}
+				onChange( parentModel )
 			}
 
 			return function( v ){
@@ -319,5 +331,3 @@ if ( !window.observable )
 	window.observable = helden.observable
 if ( !window.select )
 	window.select = helden.select
-
-

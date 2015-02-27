@@ -1,5 +1,5 @@
 /**
- * helden.js default UI extension
+ * helden.js default UI extension focused on JQuery/Zepto API.
  * @author: Miere Liniel Teixeira <miere.teixeira@gmail.com>
  */
 !function(){
@@ -74,4 +74,3 @@
 		}
 	}
 }()
-
