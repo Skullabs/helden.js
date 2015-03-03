@@ -3,9 +3,8 @@
 	<head>
     	<meta charset="utf-8" />
 		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css" />
-		<script src="../src/helden.min.js"></script>
-		<script src="../src/helden.ui.min.js"></script>
 		<script src="zepto.min.js"></script>
+		<script src="../dist/heldenjs-0.2.0.min.js"></script>
 		<style>
 
 			#template {
@@ -50,7 +49,7 @@
 					form: select( "#template form" ).bindIds(),
 
 					focusFirstElement: select( "#template form #title" ).focus(),
-	
+
 					items: select( "#template .items li" ).forEach({
 						title: select(".title").bind(),
 						description: select( ".description" ).bind(),

@@ -7,64 +7,7 @@ window.helden = (function(){
 	// constants
 	var DO_NOTHING = function(){}
 	var BINDABLE_ELEMENTS = [ "BUTTON", "INPUT", "TEXTAREA", "SELECT" ]
-	var extensions = {}
 
-	/**
-	 * The Obserable API
-	 */
-	function Observable( selector ) {
-
-		/**
-		 * A reflective constructor instantiator
-		 */
-		function construct(constructor, args) {
-			function F() {
-				constructor.apply(this, args);
-			}
-			F.prototype = constructor.prototype;
-			return new F();
-		}
-
-		/**
-		 * Bind all input/textarea/select/radio/checkbox ids found inside nodes retrieved by current selector
-		 */
-		this.bindIds = function(){
-			return new FormBinder( selector )
-		}
-
-		/**
-		 * Bind all input/textarea/select/radio/checkbox names found inside nodes retrieved by current selector
-		 */
-		this.bindNames = function(){
-			return new FormBinder( selector, "name" )
-		}
-
-		/**
-		 * Bind all ids found inside nodes retrieved by current selector
-		 */
-		this.forEach = function( model ){
-			return new ForEachBinder( selector, model )
-		}
-
-		/**
-		 *
-		 */
-		this.bind = function(){
-			if ( arguments.length == 2 )
-				return new DomEventBinder( selector, arguments[0], arguments[1] )
-			return new DomBinder( selector )
-		}
-
-		for ( var attr in extensions ){
-			this[ attr ] = function( attr ){
-					return function(){
-						var ext = construct( extensions[attr], arguments )
-						ext.selector = selector
-						return ext
-				}
-			}( attr )
-		}
-	}
 
 	/**
 	 * observable implementation of array
@@ -128,9 +71,9 @@ window.helden = (function(){
 	 * Make the elements from a form bind its ID's elements against a model.
 	 */
 	function FormBinder( selector, attribute ) {
-		this.selector = selector
 		var model = {}
 		attribute = attribute || "id"
+		this.selector = selector
 
 		this.configure = function( view ) {
 			bindModelToView( view )
@@ -154,11 +97,10 @@ window.helden = (function(){
 	 * Bind a view against an array of observable model.
 	 */
 	function ForEachBinder( selector, templateModel ) {
-		this.selector = selector
-
-		var name = selector.replace(/[^a-zA-Z0-9]/g, '')
+		var name = null
 		var model = new ObservableArray()
 		var onChange = DO_NOTHING
+		this.selector = selector
 
 		this.onChange = function( callback ){
 			if ( !isFunction( callback ) )
@@ -169,6 +111,7 @@ window.helden = (function(){
 
 		this.configure = function( view, originalModel, defaultValue, parentModel ) {
 
+			name = this.selector.replace(/[^a-zA-Z0-9]/g, '')
 			var parent = view.parent()
 			var template = view.clone()
 			view.remove()
@@ -302,32 +245,136 @@ window.helden = (function(){
 	}
 
 	/**
-	 * Exposed 'observable' API
+	 * A reflective constructor instantiator
 	 */
-	var select = function(){
-		if ( arguments.length == 1 && ( typeof arguments[0] ) == "string" )
-			return new Observable( arguments[0] )
-		else if ( arguments.length == 2 )
-			return makeModelObservable.apply( this, arguments )
-		throw "Invalid syntax"
+	function construct(constructor, args) {
+		function F() {
+			constructor.apply(this, args);
+		}
+		F.prototype = constructor.prototype;
+		return new F();
 	}
-	select.extensions = extensions
+
+	/**
+	 * Selector
+	 */
+	function Selector( selector) {
+		this.selector = selector
+
+		for ( var attr in Selector.extensions ){
+			this[ attr ] = function( attr ){
+					return function(){
+						var ext = construct( Selector.extensions[attr], arguments )
+						ext.selector = selector
+						return ext
+				}
+			}( attr )
+		}
+	}
+
+	/**
+	 *
+	 */
+	Selector.prototype = {
+
+			/**
+			 *
+			 */
+			bind: function(){
+				if ( arguments.length == 2 )
+					return new DomEventBinder( this.selector, arguments[0], arguments[1] )
+				return new DomBinder( this.selector )
+			},
+
+			/**
+			 * Bind all input/textarea/select/radio/checkbox ids found inside nodes retrieved by current selector
+			 */
+			bindIds: function(){
+				return new FormBinder( this.selector )
+			},
+
+			/**
+			 * Bind all input/textarea/select/radio/checkbox names found inside nodes retrieved by current selector
+			 */
+			bindNames: function(){
+				return new FormBinder( this.selector, "name" )
+			},
+
+			/**
+			 * Bind all ids found inside nodes retrieved by current selector
+			 */
+			forEach: function( model ){
+				return new ForEachBinder( this.selector, model )
+			}
+	}
+
+	/**
+	 * Selector DSL API extensions
+	 */
+	Selector.extensions = {
+
+		bindAttr: function( attr ){
+			this.configure = function( view, model, value ) {
+				var method = function( newValue ){
+					if ( wasDefined( newValue ) )
+						model.attr( attr, newValue )
+					return model.attr( attr )
+				}
+
+				if ( wasDefined( value ) )
+					method( value )
+
+				return method
+			}
+		},
+		bindProp:function( prop ){
+			this.configure = function( view, originalModel ){
+				return function(){
+					if ( value )
+						view.prop( prop, value )
+					return view.prop( prop )
+				}
+			}
+		},
+		bindCss:function( css ){
+			this.configure = function( view, originalModel ){
+				return function(){
+					if ( value )
+						view.prop( css, value )
+					return view.css( css )
+				}
+			}
+		}
+	}
 
 	var helden = {
-		select: select,
-		observable: makeModelObservable,
-		util: {
-			DomBinder: DomBinder,
-			DomEventBinder: DomEventBinder,
-			ForEachBinder: ForEachBinder,
-			FormBinder: FormBinder,
-			ObservableArray: ObservableArray
+		Selector: Selector,
+		DomBinder: DomBinder,
+		DomEventBinder: DomEventBinder,
+		ForEachBinder: ForEachBinder,
+		FormBinder: FormBinder,
+		ObservableArray: ObservableArray,
+
+		dsl: {
+			observable: makeModelObservable,
+			observeAView: makeModelObserveAView,
+			bindAttr: Selector.extensions.bindAttr,
+			bindProp: Selector.extensions.bindProp,
+			bindCss: Selector.extensions.bindCss,
+			bind: Selector.prototype.bind,
+			select: function()
+			{
+				if ( arguments.length == 1 && ( typeof arguments[0] ) == "string" )
+					return new Selector( arguments[0] )
+				throw "Invalid syntax"
+			}
 		}
 	}
 	return helden
 })()
 
-if ( !window.observable )
-	window.observable = helden.observable
-if ( !window.select )
-	window.select = helden.select
+window.H = helden.dsl
+if ( (typeof noGlobals)=="undefined" )
+	for ( var attr in H )
+		if ( !window[attr] )
+			window[attr] = H[attr]

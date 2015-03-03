@@ -11,7 +11,7 @@
 	/**
 	 * Defines if a view should be visible or not
 	 */
-	helden.select.extensions.visible = function( initialValue ){
+	helden.Selector.extensions.visible = function( initialValue ){
 		var isVisible = initialValue || false
 
 		this.configure = function( view, model, value )
@@ -38,7 +38,7 @@
 	/**
 	 * Force a focus into an form element
 	 */
-	helden.select.extensions.focus = function(){
+	helden.Selector.extensions.focus = function(){
 
 		this.configure = function( view, model, value )
 		{
@@ -51,7 +51,7 @@
 	/**
 	 * Apply fadeout effect in dom element
 	 */
-	helden.select.extensions.fadeout = function(){
+	helden.Selector.extensions.fadeout = function(){
 
 		this.configure = function( view, model, value )
 		{
@@ -64,7 +64,7 @@
 	/**
 	 * Apply fadein effect in dom element
 	 */
-	helden.select.extensions.fadein = function(){
+	helden.Selector.extensions.fadein = function(){
 
 		this.configure = function( view, model, value )
 		{
