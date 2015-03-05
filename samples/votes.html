@@ -5,7 +5,7 @@
     	<meta charset="utf-8" />
 		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css" />
 		<script src="zepto.min.js"></script>
-		<script src="../dist/heldenjs-0.2.0.js"></script>
+		<script src="../dist/heldenjs-0.2.1.min.js"></script>
 		<style>
 
 			#template {
@@ -45,36 +45,36 @@
 
 			$(function(){
 
-				var todo = observable({
+				var todo = H.observable({
 
 					/**
 					 * Make bindable all form elements that have an id
 					 */
-					form: select( "#template form" ).bindIds(),
+					form: H.select( "#template form" ).bindIds(),
 
 					/**
 					 * Force a focus on first form element
 					 */
-					focusFirstElement: select( "#template form #description" ).focus(),
+					focusFirstElement: H.select( "#template form #description" ).focus(),
 
 					/**
 					 * The question list.
 					 */
-					items: select( "#template .items li" ).forEach({
+					items: H.select( "#template .items li" ).forEach({
 
 						// votes display
-						votes: select( ".btn-vote-up" ).bind(),
+						votes: H.select( ".btn-vote-up" ).bind(),
 						// description display
-						description: select( ".description" ).bind(),
+						description: H.select( ".description" ).bind(),
 
 						// remove a question
-						removeMe: select( "span" ).bind( "click", function( view, parent )
+						removeMe: H.select( "span" ).bind( "click", function( view, parent )
 						{
 							parent.items().remove( this )
 						}),
 
 						// vote it up
-						onVoteUp: select( ".btn-vote-up" ).bind( "click", function( view, parent )
+						onVoteUp: H.select( ".btn-vote-up" ).bind( "click", function( view, parent )
 						{
 							var newVotes = parseInt( this.votes() ) + 1
 							this.votes( newVotes )
@@ -85,7 +85,7 @@
 					/**
 					 * Add a new item to items' list
 					 */
-					addItem: select( "#template .btn-add" ).bind( "click", function()
+					addItem: H.select( "#template .btn-add" ).bind( "click", function()
 					{
 						this.items().push( {
 							votes: this.form().votes(),

@@ -11,7 +11,7 @@
 
 	<groupId>io.skullabs.heldenjs</groupId>
 	<artifactId>heldenjs</artifactId>
-	<version>0.2.0</version>
+	<version>0.2.1</version>
 	<name>Helden JS</name>
 	<packaging>pom</packaging>
 
@@ -19,4 +19,5 @@
 		<sourceDirectory>${project.basedir}/source</sourceDirectory>
 		<directory>${project.basedir}/dist</directory>
 	</build>
+
 </project>

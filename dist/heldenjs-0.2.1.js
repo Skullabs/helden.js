@@ -12,9 +12,10 @@ window.helden = (function(){
 	/**
 	 * observable implementation of array
 	 */
-	function ObservableArray( onAdd, onRemove ){
+	function ObservableArray( onAdd, onRemove, onUpdate ){
 		this.onAdd = onAdd
 		this.onRemove = onRemove
+		this.onUpdate = onUpdate
 		this.length = 0
 		var counter = 0
 		var array = []
@@ -100,6 +101,7 @@ window.helden = (function(){
 		var name = null
 		var model = new ObservableArray()
 		var onChange = DO_NOTHING
+		var autoRemoveTemplate = true
 		this.selector = selector
 
 		this.onChange = function( callback ){
@@ -109,12 +111,19 @@ window.helden = (function(){
 			return this
 		}
 
+		this.autoRemoveTemplate = function( value ){
+			if ( value != null && value != undefined )
+				autoRemoveTemplate = value
+			return this
+		}
+
 		this.configure = function( view, originalModel, defaultValue, parentModel ) {
 
 			name = this.selector.replace(/[^a-zA-Z0-9]/g, '')
 			var parent = view.parent()
 			var template = view.clone()
-			view.remove()
+			if ( autoRemoveTemplate )
+				view.remove()
 
 			model.onAdd = function( index, item ){
 				var clone = template.clone()
@@ -234,7 +243,7 @@ window.helden = (function(){
 				var objview = obj.selector ? view.find( obj.selector ) : view
 				var resp = obj.configure( objview, target, defaultValue, parentModel )
 				resp.$ = objview
-				target[attr] = resp
+				target[attr] = wrap( resp, obj )
 			}
 		}
 		return target
@@ -242,6 +251,66 @@ window.helden = (function(){
 
 	function isFunction( obj ) {
 		return (typeof obj) == 'function'
+	}
+
+	function wasDefined( value ){
+			return ( value != undefined && value != null )
+	}
+
+	function wrap( method, target ){
+		var wrapped = method.bind( target )
+		wrapped.is_wrapped = true
+	  return wrapped
+	}
+
+	function unwrap( object ){
+
+	  function unwrap_array(object){
+	    var arr = []
+	    for ( var i=0; i<object.length; i++ )
+	      var value = unwrap( object[i] )
+	      if ( value != undefined )
+	        arr.push( value )
+	    return arr
+	  }
+
+	  function unwrap_oarray(object){
+	    var arr = []
+	    for ( var i=0; i<object.length; i++ ){
+	      var value = unwrap( object.get(i) )
+	      if ( value != undefined )
+	        arr.push( value )
+	    }
+	    return arr
+	  }
+
+	  function unwrap_object( object ){
+	    var obj = {}
+	    for ( var attr in object ){
+				if ( !H.unserializableAttributes[attr] ){
+		      var value = unwrap( object[attr] )
+		      if ( value != undefined )
+		        obj[attr] = value
+				}
+	    }
+	    return obj
+	  }
+
+	  function unwrap_method( method ){
+	    if ( method.is_wrapped )
+	      return method()
+	  }
+
+	  if ( object instanceof helden.ObservableArray )
+	    return unwrap_oarray( object )
+	  else if ( object instanceof Array )
+	    return unwrap_array( object )
+	  else if ( (typeof object) == 'function' )
+	    return unwrap_method( object )
+	  else if ( (typeof object) == 'object' )
+	    return unwrap_object( object )
+	  else
+	    return object
 	}
 
 	/**
@@ -313,12 +382,25 @@ window.helden = (function(){
 	 */
 	Selector.extensions = {
 
+		accessor: function( initialValue ){
+
+			this.configure = function( view, model, newValue ){
+				var value = newValue
+				return function( newValue ){
+					if ( wasDefined( newValue ) )
+						value = newValue
+					return value
+				}
+			}
+
+		},
+
 		bindAttr: function( attr ){
 			this.configure = function( view, model, value ) {
 				var method = function( newValue ){
 					if ( wasDefined( newValue ) )
-						model.attr( attr, newValue )
-					return model.attr( attr )
+						view.attr( attr, newValue )
+					return view.attr( attr )
 				}
 
 				if ( wasDefined( value ) )
@@ -356,12 +438,18 @@ window.helden = (function(){
 		ObservableArray: ObservableArray,
 
 		dsl: {
+			unserializableAttributes:{
+				toJS: true,
+				ID_ForEachBinder: true
+			},
 			observable: makeModelObservable,
 			observeAView: makeModelObserveAView,
 			bindAttr: Selector.extensions.bindAttr,
 			bindProp: Selector.extensions.bindProp,
 			bindCss: Selector.extensions.bindCss,
 			bind: Selector.prototype.bind,
+			wasDefined: wasDefined,
+			toJS: unwrap,
 			select: function()
 			{
 				if ( arguments.length == 1 && ( typeof arguments[0] ) == "string" )
@@ -370,11 +458,13 @@ window.helden = (function(){
 			}
 		}
 	}
+
+	Selector.apply( helden.dsl )
 	return helden
 })()
 
 window.H = helden.dsl
-if ( (typeof noGlobals)=="undefined" )
+if ( (typeof useGlobals) != "undefined" )
 	for ( var attr in H )
 		if ( !window[attr] )
 			window[attr] = H[attr]
@@ -383,10 +473,6 @@ if ( (typeof noGlobals)=="undefined" )
  * @author: Miere Liniel Teixeira <miere.teixeira@gmail.com>
  */
 !function(){
-
-	function wasDefined( value ){
-		return ( value != undefined && value != null )
-	}
 
 	/**
 	 * Defines if a view should be visible or not
@@ -397,7 +483,7 @@ if ( (typeof noGlobals)=="undefined" )
 		this.configure = function( view, model, value )
 		{
 			var method = function( v ){
-				if ( wasDefined( v ) )
+				if ( H.wasDefined( v ) )
 					setValue( v )
 				return isVisible
 			}
@@ -409,7 +495,7 @@ if ( (typeof noGlobals)=="undefined" )
 				isVisible = v
 			}
 
-			value = wasDefined( value ) ? value : isVisible
+			value = H.wasDefined( value ) ? value : isVisible
 			method( value )
 			return method
 		}

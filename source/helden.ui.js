@@ -4,10 +4,6 @@
  */
 !function(){
 
-	function wasDefined( value ){
-		return ( value != undefined && value != null )
-	}
-
 	/**
 	 * Defines if a view should be visible or not
 	 */
@@ -17,7 +13,7 @@
 		this.configure = function( view, model, value )
 		{
 			var method = function( v ){
-				if ( wasDefined( v ) )
+				if ( H.wasDefined( v ) )
 					setValue( v )
 				return isVisible
 			}
@@ -29,7 +25,7 @@
 				isVisible = v
 			}
 
-			value = wasDefined( value ) ? value : isVisible
+			value = H.wasDefined( value ) ? value : isVisible
 			method( value )
 			return method
 		}
