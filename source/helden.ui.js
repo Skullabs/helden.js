@@ -7,66 +7,42 @@
 	/**
 	 * Defines if a view should be visible or not
 	 */
-	helden.Selector.extensions.visible = function( initialValue ){
-		var isVisible = initialValue || false
-
-		this.configure = function( view, model, value )
-		{
-			var method = function( v ){
-				if ( H.wasDefined( v ) )
-					setValue( v )
-				return isVisible
-			}
-
-			function setValue( v ){
-				var m = ( v == true )
-					? view.show : view.hide
-				m.call( view )
-				isVisible = v
-			}
-
-			value = H.wasDefined( value ) ? value : isVisible
-			method( value )
-			return method
+	helden.Selector.extensions.visible = {
+		notifiable: true,
+		setter: function( v ){
+			var m = v ? this.view.show : this.view.hide
+			m.call( this.view )
+			this.isVisible = v
+		},
+		getter: function(){
+			return this.isVisible
 		}
 	}
 
 	/**
 	 * Force a focus into an form element
 	 */
-	helden.Selector.extensions.focus = function(){
-
-		this.configure = function( view, model, value )
-		{
-			return function(){
-				view.focus()
-			}
+	helden.Selector.extensions.focus = {
+		getter: function(){
+			this.view.focus()
 		}
 	}
 
 	/**
 	 * Apply fadeout effect in dom element
 	 */
-	helden.Selector.extensions.fadeout = function(){
-
-		this.configure = function( view, model, value )
-		{
-			return function(){
-				view.fadeout.apply( view, arguments )
-			}
+	helden.Selector.extensions.fadeout = {
+		getter: function(){
+			this.view.fadeout()
 		}
 	}
 
 	/**
 	 * Apply fadein effect in dom element
 	 */
-	helden.Selector.extensions.fadein = function(){
-
-		this.configure = function( view, model, value )
-		{
-			return function(){
-				view.fadein.apply( view, arguments )
-			}
+	helden.Selector.extensions.fadein = {
+		getter: function(){
+			this.view.fadein()
 		}
 	}
 }()

@@ -8,6 +8,150 @@ window.helden = (function(){
 	var DO_NOTHING = function(){}
 	var BINDABLE_ELEMENTS = [ "BUTTON", "INPUT", "TEXTAREA", "SELECT" ]
 
+	function isFunction( obj ) {
+		return (typeof obj) == 'function'
+	}
+
+	function wasDefined( value ){
+			return ( value != undefined && value != null )
+	}
+
+	function makeModelObservable( model, selector ) {
+		var view = selector ? $( selector ) : $( "body" )
+		return makeModelObserveAView( model, view )
+	}
+
+	function makeModelObserveAView( model, view, target, parentModel ){
+		target = target || model
+		for ( var attr in model ) {
+			var obj = model[attr]
+			var defaultValue = target[attr]
+			defaultValue = defaultValue == obj ? null : defaultValue
+			if ( obj && isFunction( obj.configure ) ) {
+				var objview = obj.selector ? view.find( obj.selector ) : view
+				var resp = obj.configure( objview, target, defaultValue, parentModel )
+				resp.$ = objview
+				target[attr] = wrap( resp, target )
+			} else if ( isFunction( obj ) )
+				target[attr] = obj.bind( target )
+		}
+		return target
+	}
+
+  /**
+   * Convert an abstract object into a valid extension.
+   */
+  function convertToExtension( extension ){
+
+    function getterAndSetter( v ){
+      if ( arguments.length )
+        extension.setter.apply( this, arguments )
+      return extension.getter.apply( this )
+    }
+
+    function notifiableSetter( v ){
+			if ( isFunction( this.param ) )
+	      v = this.param.apply( this.model )
+			return getterAndSetter.call( this, v )
+    }
+
+    function getDslObject(){
+      if ( extension.notifiable )
+        return notifiableSetter.bind(this)
+      return getterAndSetter.bind(this)
+    }
+
+    function configurer( initialValue ){
+      this.configure = function( view, model, value, parentModel ) {
+
+				function Extension(){
+					this.param = initialValue
+					this.view = view
+					this.model = model
+					this.parentModel = parentModel
+					extension.init.call( this, view, model )
+				}
+				Extension.prototype = extension
+
+				var configuredExtension = new Extension()
+        var setter = getDslObject.call( configuredExtension )
+				setter.call( configuredExtension, value )
+				return setter
+      }
+    }
+
+    extension.init = extension.init || DO_NOTHING
+		extension.getter = extension.getter || DO_NOTHING
+		extension.setter = extension.setter || DO_NOTHING
+    return configurer
+  }
+
+	function wrap( method, target ){
+		var wrapped = method.bind( target )
+		wrapped.is_wrapped = true
+	  return wrapped
+	}
+
+	function unwrap( object ){
+
+	  function unwrap_array(object){
+	    var arr = []
+	    for ( var i=0; i<object.length; i++ )
+	      var value = unwrap( object[i] )
+	      if ( value != undefined )
+	        arr.push( value )
+	    return arr
+	  }
+
+	  function unwrap_oarray(object){
+	    var arr = []
+	    for ( var i=0; i<object.length; i++ ){
+	      var value = unwrap( object.get(i) )
+	      if ( value != undefined )
+	        arr.push( value )
+	    }
+	    return arr
+	  }
+
+	  function unwrap_object( object ){
+	    var obj = {}
+	    for ( var attr in object ){
+				if ( !H.unserializableAttributes[attr] ){
+		      var value = unwrap( object[attr] )
+		      if ( value != undefined )
+		        obj[attr] = value
+				}
+	    }
+	    return obj
+	  }
+
+	  function unwrap_method( method ){
+	    if ( method.is_wrapped )
+	      return method()
+	  }
+
+	  if ( object instanceof helden.ObservableArray )
+	    return unwrap_oarray( object )
+	  else if ( object instanceof Array )
+	    return unwrap_array( object )
+	  else if ( (typeof object) == 'function' )
+	    return unwrap_method( object )
+	  else if ( (typeof object) == 'object' )
+	    return unwrap_object( object )
+	  else
+	    return object
+	}
+
+	/**
+	 * A reflective constructor instantiator
+	 */
+	function construct(constructor, args) {
+		function F() {
+			constructor.apply(this, args);
+		}
+		F.prototype = constructor.prototype;
+		return new F();
+	}
 
 	/**
 	 * observable implementation of array
@@ -25,9 +169,12 @@ window.helden = (function(){
 		}
 		this.push = function( item ) {
 			var index = counter++
-			var nitem = this.onAdd.call( array, index, item )
-			array.push.call( array, nitem )
-			this.length = array.length
+			var nitem = this.onAdd.call( array, index, item ) || item
+			if ( nitem ) {
+					array.push.call( array, nitem )
+					this.length = array.length
+			}
+			return nitem
 		}
 		this.remove = function( item ){
 			var index = array.indexOf( item );
@@ -228,102 +375,6 @@ window.helden = (function(){
 		}
 	}
 
-	function makeModelObservable( model, selector ) {
-		var view = selector ? $( selector ) : $( "body" )
-		return makeModelObserveAView( model, view )
-	}
-
-	function makeModelObserveAView( model, view, target, parentModel ){
-		target = target || model
-		for ( var attr in model ) {
-			var obj = model[attr]
-			var defaultValue = target[attr]
-			defaultValue = defaultValue == obj ? null : defaultValue
-			if ( obj && isFunction( obj.configure ) ) {
-				var objview = obj.selector ? view.find( obj.selector ) : view
-				var resp = obj.configure( objview, target, defaultValue, parentModel )
-				resp.$ = objview
-				target[attr] = wrap( resp, obj )
-			}
-		}
-		return target
-	}
-
-	function isFunction( obj ) {
-		return (typeof obj) == 'function'
-	}
-
-	function wasDefined( value ){
-			return ( value != undefined && value != null )
-	}
-
-	function wrap( method, target ){
-		var wrapped = method.bind( target )
-		wrapped.is_wrapped = true
-	  return wrapped
-	}
-
-	function unwrap( object ){
-
-	  function unwrap_array(object){
-	    var arr = []
-	    for ( var i=0; i<object.length; i++ )
-	      var value = unwrap( object[i] )
-	      if ( value != undefined )
-	        arr.push( value )
-	    return arr
-	  }
-
-	  function unwrap_oarray(object){
-	    var arr = []
-	    for ( var i=0; i<object.length; i++ ){
-	      var value = unwrap( object.get(i) )
-	      if ( value != undefined )
-	        arr.push( value )
-	    }
-	    return arr
-	  }
-
-	  function unwrap_object( object ){
-	    var obj = {}
-	    for ( var attr in object ){
-				if ( !H.unserializableAttributes[attr] ){
-		      var value = unwrap( object[attr] )
-		      if ( value != undefined )
-		        obj[attr] = value
-				}
-	    }
-	    return obj
-	  }
-
-	  function unwrap_method( method ){
-	    if ( method.is_wrapped )
-	      return method()
-	  }
-
-	  if ( object instanceof helden.ObservableArray )
-	    return unwrap_oarray( object )
-	  else if ( object instanceof Array )
-	    return unwrap_array( object )
-	  else if ( (typeof object) == 'function' )
-	    return unwrap_method( object )
-	  else if ( (typeof object) == 'object' )
-	    return unwrap_object( object )
-	  else
-	    return object
-	}
-
-	/**
-	 * A reflective constructor instantiator
-	 */
-	function construct(constructor, args) {
-		function F() {
-			constructor.apply(this, args);
-		}
-		F.prototype = constructor.prototype;
-		return new F();
-	}
-
 	/**
 	 * Selector
 	 */
@@ -333,7 +384,8 @@ window.helden = (function(){
 		for ( var attr in Selector.extensions ){
 			this[ attr ] = function( attr ){
 					return function(){
-						var ext = construct( Selector.extensions[attr], arguments )
+						var extension = convertToExtension( Selector.extensions[attr] )
+						var ext = construct( extension, arguments )
 						ext.selector = selector
 						return ext
 				}
@@ -382,49 +434,39 @@ window.helden = (function(){
 	 */
 	Selector.extensions = {
 
-		accessor: function( initialValue ){
-
-			this.configure = function( view, model, newValue ){
-				var value = newValue
-				return function( newValue ){
-					if ( wasDefined( newValue ) )
-						value = newValue
-					return value
-				}
-			}
-
-		},
-
-		bindAttr: function( attr ){
-			this.configure = function( view, model, value ) {
-				var method = function( newValue ){
-					if ( wasDefined( newValue ) )
-						view.attr( attr, newValue )
-					return view.attr( attr )
-				}
-
-				if ( wasDefined( value ) )
-					method( value )
-
-				return method
+		accessor: {
+			getter: function(){
+				return this.value
+			},
+			setter: function( v ){
+				this.value = v
 			}
 		},
-		bindProp:function( prop ){
-			this.configure = function( view, originalModel ){
-				return function(){
-					if ( value )
-						view.prop( prop, value )
-					return view.prop( prop )
-				}
+
+		bindAttr: {
+			getter: function(){
+				return this.view.attr( this.param )
+			},
+			setter: function( v ){
+				this.view.attr( this.param, v )
 			}
 		},
-		bindCss:function( css ){
-			this.configure = function( view, originalModel ){
-				return function(){
-					if ( value )
-						view.prop( css, value )
-					return view.css( css )
-				}
+
+		bindProp:{
+			getter: function(){
+				return this.view.prop( this.param )
+			},
+			setter: function( v ){
+				this.view.prop( this.param, v )
+			}
+		},
+
+		bindCss:{
+			getter: function(){
+				return this.view.css( this.param )
+			},
+			setter: function( v ){
+				this.view.css( this.param, v )
 			}
 		}
 	}
@@ -444,11 +486,9 @@ window.helden = (function(){
 			},
 			observable: makeModelObservable,
 			observeAView: makeModelObserveAView,
-			bindAttr: Selector.extensions.bindAttr,
-			bindProp: Selector.extensions.bindProp,
-			bindCss: Selector.extensions.bindCss,
 			bind: Selector.prototype.bind,
 			wasDefined: wasDefined,
+			isFunction: isFunction,
 			toJS: unwrap,
 			select: function()
 			{
