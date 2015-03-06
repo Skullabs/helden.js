@@ -43,6 +43,13 @@ window.helden = (function(){
    */
   function convertToExtension( extension ){
 
+		extension.init = extension.init || DO_NOTHING
+		extension.getter = extension.getter || DO_NOTHING
+		extension.setter = extension.setter || DO_NOTHING
+
+		function Extension(){}
+		Extension.prototype = extension
+
     function getterAndSetter( v ){
       if ( arguments.length )
         extension.setter.apply( this, arguments )
@@ -64,25 +71,21 @@ window.helden = (function(){
     function configurer( initialValue ){
       this.configure = function( view, model, value, parentModel ) {
 
-				function Extension(){
-					this.param = initialValue
-					this.view = view
-					this.model = model
-					this.parentModel = parentModel
-					extension.init.call( this, view, model )
-				}
-				Extension.prototype = extension
-
 				var configuredExtension = new Extension()
-        var setter = getDslObject.call( configuredExtension )
-				setter.call( configuredExtension, value )
-				return setter
+				configuredExtension.param = initialValue
+				if ( !extension.optimize )
+					configuredExtension.view = view
+				configuredExtension.model = model
+				configuredExtension.parentModel = parentModel
+
+				extension.init.call( this )
+        var getterOrSetter = getDslObject.call( configuredExtension )
+				getterOrSetter.call( configuredExtension, value )
+
+				return getterOrSetter
       }
     }
 
-    extension.init = extension.init || DO_NOTHING
-		extension.getter = extension.getter || DO_NOTHING
-		extension.setter = extension.setter || DO_NOTHING
     return configurer
   }
 
