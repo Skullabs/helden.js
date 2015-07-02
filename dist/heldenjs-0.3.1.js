@@ -13,7 +13,7 @@ window.helden = (function(){
 	}
 
 	function wasDefined( value ){
-			return ( value != undefined && value != null )
+		return ( value != undefined && value != null )
 	}
 
 	function makeModelObservable( model, selector ) {
@@ -43,12 +43,12 @@ window.helden = (function(){
    */
   function convertToExtension( extension ){
 
-		extension.init = extension.init || DO_NOTHING
-		extension.getter = extension.getter || DO_NOTHING
-		extension.setter = extension.setter || DO_NOTHING
+	extension.init = extension.init || DO_NOTHING
+	extension.getter = extension.getter || DO_NOTHING
+	extension.setter = extension.setter || DO_NOTHING
 
-		function Extension(){}
-		Extension.prototype = extension
+	function Extension(){}
+	Extension.prototype = extension
 
     function getterAndSetter( v ){
       if ( arguments.length )
@@ -57,9 +57,9 @@ window.helden = (function(){
     }
 
     function notifiableSetter( v ){
-			if ( isFunction( this.param ) )
-	      v = this.param.apply( this.model )
-			return getterAndSetter.call( this, v )
+		if ( isFunction( this.param ) )
+			v = this.param.apply( this.model )
+		return getterAndSetter.call( this, v )
     }
 
     function getDslObject(){
@@ -69,26 +69,32 @@ window.helden = (function(){
     }
 
     function configurer( initialValue ){
-      this.configure = function( view, model, value, parentModel ) {
 
-				var configuredExtension = new Extension()
-				configuredExtension.param = initialValue
-				if ( !extension.optimize )
-					configuredExtension.view = view
-				configuredExtension.model = model
-				configuredExtension.parentModel = parentModel
+		this.configure = function( view, model, value, parentModel ) {
+			var configuredExtension = new Extension()
+			configuredExtension.param = initialValue
+			if ( !extension.optimize )
+				configuredExtension.view = view
+			configuredExtension.model = model
+			configuredExtension.parentModel = parentModel
 
-				extension.init.call( this )
-        var getterOrSetter = getDslObject.call( configuredExtension )
-				getterOrSetter.call( configuredExtension, value )
+			configuredExtension.init.call( this )
+			var getterOrSetter = getDslObject.call( configuredExtension )
+			getterOrSetter.call( configuredExtension, value )
 
-				return getterOrSetter
-      }
+			return getterOrSetter
+		}
     }
 
     return configurer
   }
-
+  
+	function as_extension( callable ){
+		if ( isFunction( callable ) )
+			return function(){ return construct(callable, arguments) }
+		return function(){ return callable }
+	}
+  
 	function wrap( method, target ){
 		var wrapped = method.bind( target )
 		wrapped.is_wrapped = true
@@ -96,12 +102,16 @@ window.helden = (function(){
 	}
 
 	function unwrap( object ){
+		
+	  function is_valid( value ){
+		  return value != undefined && value !== ""
+	  }
 
 	  function unwrap_array(object){
 	    var arr = []
 	    for ( var i=0; i<object.length; i++ )
 	      var value = unwrap( object[i] )
-	      if ( value != undefined )
+	      if ( is_valid( value ) )
 	        arr.push( value )
 	    return arr
 	  }
@@ -110,7 +120,7 @@ window.helden = (function(){
 	    var arr = []
 	    for ( var i=0; i<object.length; i++ ){
 	      var value = unwrap( object.get(i) )
-	      if ( value != undefined )
+	      if ( is_valid( value ) )
 	        arr.push( value )
 	    }
 	    return arr
@@ -119,11 +129,11 @@ window.helden = (function(){
 	  function unwrap_object( object ){
 	    var obj = {}
 	    for ( var attr in object ){
-				if ( !H.unserializableAttributes[attr] ){
+			if ( !H.unserializableAttributes[attr] ){
 		      var value = unwrap( object[attr] )
-		      if ( value != undefined )
+		      if ( is_valid( value ) )
 		        obj[attr] = value
-				}
+			}
 	    }
 	    return obj
 	  }
@@ -229,8 +239,17 @@ window.helden = (function(){
 		this.configure = function( view ) {
 			bindModelToView( view )
 			return function( v ){
-				if ( v ) model = v
+				if ( v ) updateView( v )
 				return model
+			}
+		}
+		
+		function updateView( v ){
+			var value = null
+			for ( var attr in model ){
+				value = v[attr]
+				if ( !wasDefined(value) ) value = ""
+				model[attr](value)
 			}
 		}
 
@@ -324,6 +343,7 @@ window.helden = (function(){
 			var method = isTwoWayBindable( element )
 				? makeTwoWayBindable( element )
 				: makeOneWayBindable( element )
+			method.is_wrapped = true
 			if ( !isFunction( value ) )
 				method( value )
 			return method;
@@ -404,10 +424,10 @@ window.helden = (function(){
 			/**
 			 *
 			 */
-			bind: function(){
+			on: function(){
 				if ( arguments.length == 2 )
 					return new DomEventBinder( this.selector, arguments[0], arguments[1] )
-				return new DomBinder( this.selector )
+				throw "Invalid arguments for event binding('on' method): " + arguments
 			},
 
 			/**
@@ -420,9 +440,7 @@ window.helden = (function(){
 			/**
 			 * Bind all input/textarea/select/radio/checkbox names found inside nodes retrieved by current selector
 			 */
-			bindNames: function(){
-				return new FormBinder( this.selector, "name" )
-			},
+			bindNames: as_extension( new FormBinder( this.selector, "name" ) ),
 
 			/**
 			 * Bind all ids found inside nodes retrieved by current selector
@@ -493,6 +511,7 @@ window.helden = (function(){
 			wasDefined: wasDefined,
 			isFunction: isFunction,
 			toJS: unwrap,
+			extension: as_extension,
 			select: function()
 			{
 				if ( arguments.length == 1 && ( typeof arguments[0] ) == "string" )
