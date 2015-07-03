@@ -344,8 +344,16 @@ window.helden = (function(){
 	/**
 	 * Make dom selected nodes binded against an observable model.
 	 */
-	function DomBinder( selector ) {
+	function DomBinder( selector, callback ) {
 		this.selector = selector
+
+		function formatter(){
+			if ( !callback ) return arguments
+			var args = callback.apply(this, arguments)
+			if ( !(args instanceof Array) )
+				args = [args]
+			return args
+		}
 
 		this.configure = function( element, model, value ) {
 			var method = isTwoWayBindable( element )
@@ -365,12 +373,14 @@ window.helden = (function(){
 
 		function makeInputsTwoWayBindable( element ) {
 			return function(){
-				return element.val.apply( element, arguments )
+				var args = formatter.apply( this, arguments )
+				return element.val.apply( element, args )
 			}
 		}
 
 		function makeCheckboxTwoWayBindable( element ) {
 			return function( value ) {
+				value = formatter( value )
 				if ( value == undefined )
 					return element.prop( "checked" )
 				return element.prop( "checked", value )
@@ -379,7 +389,8 @@ window.helden = (function(){
 
 		function makeOneWayBindable( element ) {
 			return function(){
-				return element.text.apply( element, arguments )
+				var args = formatter.apply( this, arguments )
+				return element.text.apply( element, args )
 			}
 		}
 
@@ -434,8 +445,8 @@ window.helden = (function(){
 		/**
 		 * 
 		 */
-		bind: function(){
-			return new DomBinder( this.selector )
+		bind: function( callback ){
+			return new DomBinder( this.selector, callback )
 		},
 
 		/**
