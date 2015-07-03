@@ -80,7 +80,7 @@ window.helden = (function(){
 
 			configuredExtension.init.call( this )
 			var getterOrSetter = getDslObject.call( configuredExtension )
-			getterOrSetter.call( configuredExtension, value )
+			getterOrSetter.call( configuredExtension, value || initialValue )
 
 			return getterOrSetter
 		}
@@ -98,6 +98,7 @@ window.helden = (function(){
 	function wrap( method, target ){
 		var wrapped = method.bind( target )
 		wrapped.is_wrapped = true
+		wrapped.is_dom_event = method.is_dom_event
 	  return wrapped
 	}
 
@@ -139,7 +140,7 @@ window.helden = (function(){
 	  }
 
 	  function unwrap_method( method ){
-	    if ( method.is_wrapped )
+	    if ( method.is_wrapped && !method.is_dom_event )
 	      return method()
 	  }
 
@@ -180,6 +181,10 @@ window.helden = (function(){
 		this.get = function( index ) {
 			return array[ index ]
 		}
+		this.pushAll = function( items ) {
+			for ( var i=0; i<items.length; i++ )
+				this.push( items[i] )
+		}
 		this.push = function( item ) {
 			var index = counter++
 			var nitem = this.onAdd.call( array, index, item ) || item
@@ -188,6 +193,9 @@ window.helden = (function(){
 					this.length = array.length
 			}
 			return nitem
+		}
+		this.clear = function(){
+			this.reset([])
 		}
 		this.remove = function( item ){
 			var index = array.indexOf( item );
@@ -376,7 +384,8 @@ window.helden = (function(){
 		}
 
 		function isTwoWayBindable( element ){
-			return BINDABLE_ELEMENTS.indexOf( element.prop("nodeName").toUpperCase() ) >= 0
+			var nodeName = element.prop("nodeName")
+			return nodeName && BINDABLE_ELEMENTS.indexOf( nodeName.toUpperCase() ) >= 0
 		}
 	}
 
@@ -393,6 +402,7 @@ window.helden = (function(){
 					args.push( arguments[i] )
 				return callback.apply( model, args )
 			}
+			eventCallback.is_dom_event = true
 			view.on( event, eventCallback )
 			return eventCallback
 		}
@@ -516,6 +526,7 @@ window.helden = (function(){
 			},
 			observable: makeModelObservable,
 			observeAView: makeModelObserveAView,
+			on: Selector.prototype.on,
 			bind: Selector.prototype.bind,
 			wasDefined: wasDefined,
 			isFunction: isFunction,
