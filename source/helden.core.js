@@ -30,7 +30,6 @@ window.helden = (function(){
 			if ( obj && isFunction( obj.configure ) ) {
 				var objview = obj.selector ? view.find( obj.selector ) : view
 				var resp = obj.configure( objview, target, defaultValue, parentModel )
-				resp.$ = objview
 				target[attr] = wrap( resp, target )
 			} else if ( isFunction( obj ) )
 				target[attr] = obj.bind( target )
@@ -196,8 +195,8 @@ window.helden = (function(){
 			var index = counter++
 			var nitem = this.onAdd.call( array, index, item ) || item
 			if ( nitem ) {
-					array.push.call( array, nitem )
-					this.length = array.length
+				array.push( nitem )
+				this.length = array.length
 			}
 			return nitem
 		}
@@ -217,10 +216,9 @@ window.helden = (function(){
 			}
 		}
 		this.reset = function( arr ){
-			for ( var i=0; i<this.length; i++ )
+			for ( var i=this.length-1; i>=0; i-- )
 				this.remove( array[i] )
-			for ( var i=0; i<arr.length; i++ )
-				this.push( arr[i] )
+			this.pushAll( arr )
 		}
 		this.sort = function( sortBy ) {
 			array.sort( sortBy )
