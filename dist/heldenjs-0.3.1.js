@@ -91,8 +91,15 @@ window.helden = (function(){
   
 	function as_extension( callable ){
 		if ( isFunction( callable ) )
-			return function(){ return construct(callable, arguments) }
-		return function(){ return callable }
+			return function(){
+				var created = construct(callable, arguments)
+				created.selector = this.selector
+				return created
+			}
+		return function(){
+			callable.selector = this.selector
+			return callable
+		}
 	}
   
 	function wrap( method, target ){
