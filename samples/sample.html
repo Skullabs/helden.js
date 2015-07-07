@@ -4,7 +4,7 @@
     	<meta charset="utf-8" />
 		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css" />
 		<script src="zepto.min.js"></script>
-		<script src="../dist/heldenjs-0.2.1.min.js"></script>
+		<script src="../dist/heldenjs-0.3.1.min.js"></script>
 		<style>
 
 			#template {
@@ -54,12 +54,12 @@
 						title: H.select(".title").bind(),
 						description: H.select( ".description" ).bind(),
 
-						removeMe: H.select( "span" ).bind( "click", function( view, parent ){
+						removeMe: H.select( "span" ).on( "click", function( view, parent ){
 							parent.items().remove( this )
 						})
 					}),
 
-					addItem: H.select( "#template .btn-add" ).bind( "click", function(){
+					addItem: H.select( "#template .btn-add" ).on( "click", function(){
 						this.items().push({
 							title: this.form().title(),
 							description: this.form().description()

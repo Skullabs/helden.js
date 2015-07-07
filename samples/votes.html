@@ -5,7 +5,7 @@
     	<meta charset="utf-8" />
 		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css" />
 		<script src="zepto.min.js"></script>
-		<script src="../dist/heldenjs-0.2.1.min.js"></script>
+		<script src="../dist/heldenjs-0.3.1.js"></script>
 		<style>
 
 			#template {
@@ -68,13 +68,13 @@
 						description: H.select( ".description" ).bind(),
 
 						// remove a question
-						removeMe: H.select( "span" ).bind( "click", function( view, parent )
+						removeMe: H.select( "span" ).on( "click", function( view, parent )
 						{
 							parent.items().remove( this )
 						}),
 
 						// vote it up
-						onVoteUp: H.select( ".btn-vote-up" ).bind( "click", function( view, parent )
+						onVoteUp: H.select( ".btn-vote-up" ).on( "click", function( view, parent )
 						{
 							var newVotes = parseInt( this.votes() ) + 1
 							this.votes( newVotes )
@@ -85,7 +85,7 @@
 					/**
 					 * Add a new item to items' list
 					 */
-					addItem: H.select( "#template .btn-add" ).bind( "click", function()
+					addItem: H.select( "#template .btn-add" ).on( "click", function()
 					{
 						this.items().push( {
 							votes: this.form().votes(),
