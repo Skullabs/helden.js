@@ -1,5 +1,5 @@
 ## HeldenJS
-A very tiny and non-intrusive MVVP library.
+A very tiny and non-intrusive MVVM library.
 
 ## Objective
 HeldenJS is just a proof-of-concept library. Its main goal is show that is possible to develop a JS library that:
