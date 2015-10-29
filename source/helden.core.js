@@ -367,10 +367,11 @@ window.helden = (function(){
 			var method = isTwoWayBindable( element )
 				? makeTwoWayBindable( element )
 				: makeOneWayBindable( element )
-			method.is_wrapped = true
+			//method.is_wrapped = true
+			method = wrap( method, model )
 			if ( !isFunction( value ) )
 				method( value )
-			return method;
+			return method
 		}
 
 		function makeTwoWayBindable( element ) {
