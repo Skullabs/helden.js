@@ -5,7 +5,7 @@
     	<meta charset="utf-8" />
 		<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css" />
 		<script src="zepto.min.js"></script>
-		<script src="../dist/heldenjs-0.3.1.js"></script>
+		<script src="../dist/heldenjs-0.3.2.js"></script>
 		<style>
 
 			#template {
@@ -105,7 +105,31 @@
 					}
 				})
 
-				todo.focusFirstElement()
+				//todo.focusFirstElement()
+
+				var listData = [
+					{
+						title: "Songs",
+						details: [ { name: "Song Remains the Same" }, { name: "The Rover" } ]
+					},
+					{
+						title: "Friends",
+						details: [ { name: "Ronei" }, { name: "Krasovisky" } ]
+					}
+				]
+
+				var listView = H.observable({
+
+					list: H.select( "#list .item" ).forEach({
+						title: H.select( "h3" ).bind(),
+						details: H.select(".sublist li").forEach({
+							name: H.select("span").bind()
+						})
+					})
+
+				})
+
+				listView.list( listData )
 			})
 
 		</script>
@@ -126,6 +150,17 @@
 				<li>
 					<input type="button" class="pure-button pure-button-primary btn-vote-up" />
 					<span class="description"></span>
+				</li>
+			</ul>
+		</div>
+
+		<div id="list">
+			<ul>
+				<li class="item">
+					<h3></h3>
+					<ol class="sublist">
+						<li> <span></span> </li>
+					</ol>
 				</li>
 			</ul>
 		</div>

@@ -338,6 +338,9 @@ window.helden = (function(){
 				onChange( parentModel )
 			}
 
+			if ( defaultValue && !isFunction(defaultValue) )
+				model.reset( defaultValue )
+
 			return function( v ){
 				if ( v )
 					model.reset( v )
