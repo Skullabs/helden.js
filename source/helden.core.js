@@ -147,7 +147,7 @@ window.helden = (function(){
 
 	  function unwrap_method( method ){
 	    if ( method.is_wrapped && !method.is_dom_event )
-	      return method()
+	      return unwrap( method() )
 	  }
 
 	  if ( object instanceof helden.ObservableArray )
@@ -281,17 +281,8 @@ window.helden = (function(){
 	 */
 	function ForEachBinder( selector, templateModel ) {
 		var name = null
-		var model = new ObservableArray()
-		var onChange = DO_NOTHING
 		var autoRemoveTemplate = true
 		this.selector = selector
-
-		this.onChange = function( callback ){
-			if ( !isFunction( callback ) )
-				throw "Callback should be a function"
-			onChange = callback.bind( model )
-			return this
-		}
 
 		this.autoRemoveTemplate = function( value ){
 			if ( value != null && value != undefined )
@@ -300,6 +291,8 @@ window.helden = (function(){
 		}
 
 		this.configure = function( view, originalModel, defaultValue, parentModel ) {
+
+			var model = new ObservableArray()
 
 			name = this.selector.replace(/[^a-zA-Z0-9]/g, '')
 			var parent = view.parent()
@@ -313,14 +306,12 @@ window.helden = (function(){
 				clone.attr( "id", name + index )
 				makeModelObserveAView( templateModel, clone, item, originalModel )
 				parent.append( clone )
-				onChange( parentModel )
 				return item
 			}
 
 			model.onRemove = function( index, item ){
 				index = item.ID_ForEachBinder
 				parent.find( "#" + index ).remove()
-				onChange( parentModel )
 			}
 
 			model.onSort = function() {
@@ -335,7 +326,6 @@ window.helden = (function(){
 						last.after( current )
 					last = current
 				}
-				onChange( parentModel )
 			}
 
 			if ( defaultValue && !isFunction(defaultValue) )
