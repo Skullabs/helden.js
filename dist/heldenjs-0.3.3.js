@@ -390,7 +390,7 @@ window.helden = (function(){
 		function makeCheckboxTwoWayBindable( element ) {
 			return function( value ) {
 				if ( arguments.length ) {
-					value = formatter( value )[0]
+					value = formatter( value )
 					element.prop( "checked", value[0] )
 				}
 				return element.prop( "checked" )
