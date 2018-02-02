@@ -267,10 +267,12 @@ window.helden = (function(){
 		}
 
 		function bindModelToView( view ){
-			view.find( "*["+ attribute +"]" )
+		    view.find( "*["+ attribute +"]" )
 				.each(function(){
+					if ( this.type == "radio" && model[ this[attribute] ] ) return
 					var defaultValue = (this.type == "checkbox" ? this.checked : this.value) || model[ this[attribute] ] || ""
-					var m = new DomBinder().configure( $(this), model, defaultValue )
+					var binderElement = this.type == "radio" ? $("[name='" + this.name + "']") : $(this)
+					var m = new DomBinder().configure( binderElement, model, defaultValue )
 					model[ this[attribute] ] = m
 				})
 		}
@@ -365,10 +367,13 @@ window.helden = (function(){
 		}
 
 		function makeTwoWayBindable( element ) {
-			return ( element.attr("type") == "checkbox" )
-				? makeCheckboxTwoWayBindable( element )
-				: makeInputsTwoWayBindable( element )
-		}
+            var elementType = element.attr("type")
+            if ( elementType == "checkbox" )
+                return makeCheckboxTwoWayBindable( element )
+            else if ( elementType == "radio" )
+                 return makeRadioTwoWayBindable( element )
+            return makeInputsTwoWayBindable( element )
+        }
 
 		function makeInputsTwoWayBindable( element ) {
 			return function(){
@@ -386,6 +391,17 @@ window.helden = (function(){
 				return element.prop( "checked" )
 			}
 		}
+
+        function makeRadioTwoWayBindable( element ) {
+            return function( value ) {
+                if ( arguments.length ) {
+                    value = formatter( value )
+                    element.filter( "[value='" + value[0] + "']" ).prop( 'checked', true )
+                }
+                return element.filter(':checked').val()
+            }
+        }
+
 
 		function makeOneWayBindable( element ) {
 			return function(){
